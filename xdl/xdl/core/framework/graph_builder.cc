@@ -64,9 +64,17 @@ Status GraphBuilder::AddDeviceConverter() {
       if (output.output_id == Node::kDependency) {
         continue;
       }
-      if (item.arg.device != graph_->nodes[output.node_id].arg.device) {
-        XDL_CHECK_STATUS(CreateDeviceConverter(
-              item.arg.device, graph_->nodes[output.node_id].arg.device));
+      Device* src_device = item.arg.device;
+      Device* dst_device = graph_->nodes[output.node_id].arg.device;
+      if (src_device != dst_device) {
+        XDL_CHECK_STATUS(CreateDeviceConverter(src_device, dst_device));
+      }
+      for (int input_id = 0; input_id < graph_->nodes[output.node_id].inputs.size(); ++input_id) {
+        if (input_id >= graph_->nodes[output.node_id].arg.input_devices.size()) break;
+        dst_device = graph_->nodes[output.node_id].arg.input_devices[input_id];
+        if (dst_device != nullptr && src_device != dst_device) {
+          XDL_CHECK_STATUS(CreateDeviceConverter(src_device, dst_device));
+        }
       }
     }
   }
@@ -86,6 +94,17 @@ Status GraphBuilder::BuildNode(const NodeDef& def, Node* node) {
     XDL_CHECK_STATUS(ParseInput(item, &node->inputs.back()));
   }
   node->input_size = node->arg.input_name.size();
+  for (const std::string& input_dev_desc : def.input_dev_descs) {
+    if (input_dev_desc == "CPU") {
+      DeviceDef device;
+      device.device_name = "CPU";
+      node->arg.input_devices.emplace_back();
+      XDL_CHECK_STATUS(DeviceRegistry::Get()->GetDevice(
+            device, &node->arg.input_devices[node->arg.input_devices.size() - 1]));
+    } else {
+      node->arg.input_devices.emplace_back(nullptr);
+    }
+  }
   OpKernelBase* op;
   XDL_CHECK_STATUS(OpRegistry::Get()->CreateKernel(
         def, node->arg.device->DeviceType(), &op));
@@ -128,8 +147,8 @@ Status GraphBuilder::AppendOutputs() {
           .input_id = input_id});
     }
     XDL_CHECK_COND(item.input_size == input_size,
-                   Status::ArgumentError("Node Input Size Check Error "
-                                         + item.name));
+                   Status::ArgumentError("Node Input Size Check Error " + item.name
+                                         + ", " + std::to_string(item.input_size) + " != " + std::to_string(input_size)));
   }
   XDL_CHECK_STATUS(BuildSource(&graph_->nodes[Graph::kSource]));
   return Status::Ok();

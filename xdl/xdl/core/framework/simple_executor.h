@@ -25,6 +25,7 @@ limitations under the License.
 #include "xdl/core/framework/tensor.h"
 #include "xdl/core/proto/perf_stats.pb.h"
 #include "xdl/core/lib/any.h"
+#include "xdl/core/framework/run_option.h"
 
 namespace xdl {
 
@@ -40,6 +41,10 @@ class SimpleExecutor {
   void AddDoneHandler(DoneHandler handler_) {
     std::unique_lock<std::mutex> lock(done_handler_mu_);
     done_handler_.push_back(handler_);
+  }
+
+  const RunOption& GetRunOption() {
+    return run_option_;
   }
 
  private:

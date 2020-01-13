@@ -15,7 +15,7 @@ limitations under the License.
 
 #include "xdl/python/pybind/core_wrapper.h"
 
-#include <glog/logging.h>
+#include "xdl/core/utils/logging.h"
 
 #include "pybind11/stl.h"
 #include "pybind11/stl_bind.h"
@@ -32,10 +32,6 @@ PYBIND11_MAKE_OPAQUE(std::vector<size_t>);
 namespace xdl {
 namespace python_lib {
 
-void log_to_stderr() {
-  FLAGS_logtostderr = 1;
-}
-
 void CorePybind(pybind11::module& m) {
   pybind11::class_<Status> status(m, "Status");
   status
@@ -50,6 +46,7 @@ void CorePybind(pybind11::module& m) {
     .value("IndexOverflow", Status::ErrorCode::kIndexOverflow)
     .value("PsError", Status::ErrorCode::kPsError)
     .value("OutOfRange", Status::ErrorCode::kOutOfRange)
+    .value("ReachEnd", Status::ErrorCode::kReachEnd)
     .value("Internal", Status::ErrorCode::kInternal);
 
   pybind11::class_<Tensor>(m, "Tensor", pybind11::buffer_protocol())
@@ -70,7 +67,7 @@ void CorePybind(pybind11::module& m) {
           pybind11::format_descriptor<T>::format(),
           shape.size(), shape, stride);
       });
-      CHECK(false) << "Unreachable code for Tensor numpy bind";
+      XDL_CHECK(false) << "Unreachable code for Tensor numpy bind";
     });
 
   pybind11::bind_vector<std::vector<Tensor>>(
@@ -84,8 +81,6 @@ void CorePybind(pybind11::module& m) {
 
   pybind11::bind_map<std::unordered_map<std::string, std::string>>(
       m, "StringStringMap");
-
-  m.def("log_to_stderr", &log_to_stderr, "log to stderr");
 }
 
 }  // namespace python_lib

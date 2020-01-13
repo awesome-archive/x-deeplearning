@@ -18,7 +18,9 @@ limitations under the License.
 #include <thread>
 #include <google/protobuf/text_format.h>
 
+#include "xdl/core/framework/device.h"
 #include "xdl/core/utils/time_utils.h"
+#include "xdl/core/utils/logging.h"
 
 namespace xdl {
 
@@ -112,15 +114,22 @@ void SimpleExecutor::LaunchDone(int node_id, OpKernelContext* ctx, Status st) {
     CheckStatus(CheckOutputs(node_id, outputs));
   }
   if (!failed_) {
-    for (auto item : graph_->nodes[node_id].outputs) {
-      // Process on RunDone
-      if (graph_->nodes[node_id].arg.device !=
-          graph_->nodes[item.node_id].arg.device) {
+    for (auto&& item : graph_->nodes[node_id].outputs) {
+      if (item.input_id == Node::kDependency) {
+        UnRef(item.node_id);
         continue;
       }
-      if (item.input_id != Node::kDependency) {
-        input_[item.node_id][item.input_id] = outputs[item.output_id];
+      // Process on RunDone
+      Device* src_device = graph_->nodes[node_id].arg.device;
+      Device* dst_device = graph_->nodes[item.node_id].arg.device;
+      const std::vector<Device*>& input_devices = graph_->nodes[item.node_id].arg.input_devices;
+      if (item.input_id < input_devices.size() && input_devices[item.input_id] != nullptr) {
+        dst_device = input_devices[item.input_id];
       }
+      if (src_device != dst_device) {
+        continue;
+      }
+      input_[item.node_id][item.input_id] = outputs[item.output_id];
       UnRef(item.node_id);
     }
   }
@@ -139,10 +148,14 @@ void SimpleExecutor::RunDone(int node_id, OpKernelContext* ctx, Status st) {
     ctx->UnRef();
   });
   if (!failed_) {
-    for (auto item : graph_->nodes[node_id].outputs) {
+    for (auto&& item : graph_->nodes[node_id].outputs) {
       // Process on LaunchDone
       Device* src_device = graph_->nodes[node_id].arg.device;
       Device* dst_device = graph_->nodes[item.node_id].arg.device;
+      const std::vector<Device*>& input_devices = graph_->nodes[item.node_id].arg.input_devices;
+      if (item.input_id < input_devices.size() && input_devices[item.input_id] != nullptr) {
+        dst_device = input_devices[item.input_id];
+      }
       if (src_device == dst_device) {
         continue;
       }

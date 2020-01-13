@@ -65,7 +65,9 @@ struct NodeDef {
   std::string op;
   std::vector<std::string> input;
   DeviceDef device;
+  std::vector<std::string> input_dev_descs;  // NOT IN PROTO
   std::unordered_map<std::string, AttrValue> attr;
+  std::vector<DataType> output_type;
 
   proto::NodeDef ToProto() const;
   void FromProto(const proto::NodeDef& pb);
@@ -77,17 +79,12 @@ struct GraphDef {
   proto::GraphDef ToProto() const;
   void FromProto(const proto::GraphDef& pb);
   std::string ToProtoString() const;
+  void FromProtoTxtString(const std::string& pb_string);
 };
 
 struct OutputSpec {
   std::vector<std::string> output;
   DeviceDef output_device;
-};
-
-struct RunOption {
-  RunOption() : perf(false) {}
-  RunOption(bool perf) : perf(perf) {}
-  bool perf;
 };
 
 }  // namespace xdl

@@ -1,9 +1,12 @@
-![Travis (.org)](https://img.shields.io/badge/build-passing-green.svg)
-![Travis (.org)](https://img.shields.io/badge/docs-latest-green.svg)
-[![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/alibaba/x-deeplearning/blob/master/LICENSE)
-
 # 概述 
-X-DeepLearning(简称XDL)是面向高维稀疏数据场景（如广告/推荐/搜索等）深度优化的一整套解决方案。
+#### X-DeepLearning(简称XDL)是面向高维稀疏数据场景（如广告/推荐/搜索等）深度优化的一整套解决方案。XDL1.2版本已于近期发布，主要特性包括：
+* 针对大batch/低并发场景的性能优化：在此类场景下性能提升50-100%
+* 存储及通信优化：参数无需人工干预自动全局分配，请求合并，彻底消除ps的计算/存储/通信热点
+* 完整的流式训练特性：包括特征准入，特征淘汰，模型增量导出，特征counting统计等  
+* Fix了若干1.0中的小bugs  
+
+
+完整介绍请参考[XDL1.2 release note](https://github.com/alibaba/x-deeplearning/releases/tag/v1.2)
 
 ### 1. XDL训练引擎
 
@@ -13,6 +16,12 @@ X-DeepLearning(简称XDL)是面向高维稀疏数据场景（如广告/推荐/�
 
 ### 2. XDL算法解决方案
 * [快速开始](https://github.com/alibaba/x-deeplearning/wiki/XDL%E7%AE%97%E6%B3%95%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88)
+
+### 3. Blaze预估引擎
+* [快速开始](https://github.com/alibaba/x-deeplearning/blob/master/blaze/README.md)
+
+### 4. 深度树匹配模型 TDM 匹配召回引擎 
+* [快速开始](https://github.com/alibaba/x-deeplearning/wiki/TDMServing)
 
 # 联系我们
 * 欢迎通过[issue](https://github.com/alibaba/x-deeplearning/issues)和邮件组(xdl-opensource@list.alibaba-inc.com

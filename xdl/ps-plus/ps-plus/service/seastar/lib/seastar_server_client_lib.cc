@@ -45,11 +45,11 @@ const int SeastarServerClientLib::MAX_SERVER_NUM = 5000;
 const uint64_t SeastarServerClientLib::DEFAULT_TIMEOUT = 30 * 60 * 1000;
 
 SeastarServerClientLib::SeastarServerClientLib(int port,
-                                               int core_num,
-                                               int server_thread_num,
-                                               int client_thread_num,
-                                               bool bind_cores,
-                                               uint64_t timeout)
+        int core_num,
+        int server_thread_num,
+        int client_thread_num,
+        bool bind_cores,
+        uint64_t timeout)
   : context_(MAX_SERVER_NUM, 
              1, core_num, 
              client_thread_num, 
@@ -57,7 +57,7 @@ SeastarServerClientLib::SeastarServerClientLib(int port,
   , port_(port)
   , core_num_(core_num)
   , server_thread_num_(server_thread_num)
-  , client_thread_num_(client_thread_num) 
+  , client_thread_num_(client_thread_num)
   , bind_cores_(bind_cores)
   , timeout_(timeout) {
 }

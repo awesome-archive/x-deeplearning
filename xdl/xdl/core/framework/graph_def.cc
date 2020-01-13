@@ -140,6 +140,9 @@ proto::NodeDef NodeDef::ToProto() const {
   for (auto&& item : this->input) {
     result.add_input(item);
   }
+  for (auto&& item : this->output_type) {
+    result.add_output_type(DataTypeToProto(item));
+  }
   (*result.mutable_device()) = this->device.ToProto();
   for (auto&& item : this->attr) {
     (*result.mutable_attr())[item.first] = item.second.ToProto();
@@ -153,6 +156,10 @@ void NodeDef::FromProto(const proto::NodeDef& pb) {
   this->input.clear();
   for (auto&& item : pb.input()) {
     this->input.push_back(item);
+  }
+  this->output_type.clear();
+  for (auto&& item : pb.output_type()) {
+    this->output_type.push_back((DataType)(item));
   }
   this->device.FromProto(pb.device());
   this->attr.clear();
@@ -177,6 +184,17 @@ std::string GraphDef::ToProtoString() const {
 }
 
 void GraphDef::FromProto(const proto::GraphDef& pb) {
+  this->node.clear();
+  for (auto&& item : pb.node()) {
+    this->node.emplace_back();
+    this->node.back().FromProto(item);
+  }
+  this->hash = pb.hash();
+}
+
+void GraphDef::FromProtoTxtString(const std::string& pb_string) {
+  proto::GraphDef pb;
+  google::protobuf::TextFormat::ParseFromString(pb_string, &pb);
   this->node.clear();
   for (auto&& item : pb.node()) {
     this->node.emplace_back();

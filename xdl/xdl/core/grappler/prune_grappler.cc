@@ -64,7 +64,7 @@ class PruneExecutor {
       }
       auto iter = node_def_.find(real_name);
       XDL_CHECK_COND(iter != node_def_.end(),
-                     Status::ArgumentError("node def has invalid input"));
+                     Status::ArgumentError("not found node:" + real_name));
       avaliable_node_.insert(real_name);
       bfs_list_.push_back(iter->second);
     }

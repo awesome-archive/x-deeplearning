@@ -46,11 +46,7 @@ def train():
     with xdl.model_scope('train'):
       loss = model(images, labels)
       train_op = xdl.Adagrad(0.5).optimize()
-      if xdl.get_task_index() == 0:
-          ckpt_hook = xdl.CheckpointHook(1000)
-          train_sess = xdl.TrainSession(hooks=[ckpt_hook])
-      else:
-          train_sess = xdl.TrainSession()
+      train_sess = xdl.TrainSession()
 
     with xdl.model_scope('test'):
       accuracy = eval_model(images_test, labels_test)
@@ -84,7 +80,7 @@ def model(images, labels):
 
 @xdl.tf_wrapper(is_training=False)
 def eval_model(images, labels):
-    with tf.variable_scope("train", reuse=True):
+    with tf.variable_scope("train", reuse=tf.AUTO_REUSE):
         eval_y = fc(images, [784, 10], [10])
         labels_test = tf.cast(labels, tf.int64)
         correct_prediction = tf.equal(tf.argmax(eval_y, 1), labels_test)

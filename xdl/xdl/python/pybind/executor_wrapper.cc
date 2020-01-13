@@ -16,6 +16,7 @@ limitations under the License.
 #include "xdl/python/pybind/executor_wrapper.h"
 
 #include <future>
+#include "xdl/core/utils/logging.h"
 
 #include "pybind11/stl.h"
 #include "pybind11/stl_bind.h"
@@ -111,6 +112,8 @@ void ExecuteLoopImpl(ExecuteLoopSpec* spec) {
         result->status_set = true;
         result->status->set_value(st);
       }
+      std::cout << "WARN: ExecuteLoop encountered error, status[" << st.ToString() << "]";
+      return;
     }
     spec->id = (spec->id + 1) % spec->outputs.size();
     ExecuteLoopImpl(spec);
@@ -144,6 +147,11 @@ Status ExecuteLoopWait() {
   }
   return ret;
 }
+
+struct ExecutorContextWrapper {
+  std::shared_ptr<ExecutorContext> internal;
+  ExecutorContextWrapper(int size) : internal(std::make_shared<ExecutorContext>(size)) {}
+};
 
 void ExecutorPybind(pybind11::module& m) {
   pybind11::enum_<DataType>(m, "DataType")
@@ -189,15 +197,28 @@ void ExecutorPybind(pybind11::module& m) {
 
   pybind11::class_<NodeDef>(m, "NodeDef")
     .def(pybind11::init<>())
+    .def(pybind11::init<const NodeDef&>())
     .def_readwrite("name", &NodeDef::name)
     .def_readwrite("op", &NodeDef::op)
     .def_readwrite("input", &NodeDef::input)
+    .def_readwrite("output_type", &NodeDef::output_type)
     .def_readwrite("device", &NodeDef::device)
     .def_readwrite("attr", &NodeDef::attr);
+
+  pybind11::class_<ExecutorContextWrapper>(m, "ExecutorContext")
+    .def(pybind11::init<int>());
 
   pybind11::class_<RunOption>(m, "RunOption")
     .def(pybind11::init<bool>())
     .def(pybind11::init<>())
+    .def("set_in_ctx",
+      [](RunOption& a, const ExecutorContextWrapper& b) {
+        a.in_ctx = b.internal.get();
+      })
+    .def("set_out_ctx",
+      [](RunOption& a, const ExecutorContextWrapper& b) {
+        a.out_ctx = b.internal.get();
+      })
     .def_readwrite("perf", &RunOption::perf);
 
   pybind11::class_<GraphDef>(m, "GraphDef")
